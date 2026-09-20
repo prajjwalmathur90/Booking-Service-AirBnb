@@ -1,11 +1,10 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import logger from "../config/logger.config";
+import { sendSuccess } from "../utils/responses/app.response";
 
-export const pingHandler = async (req: Request, res: Response, next: NextFunction) => {
-    logger.info("Ping request received");
-    res.status(200).json({ message: "Pong!" });
+export function pingController(req: Request, res: Response) {
+  logger.info("Ping controller called", {
+    correlationId: req.headers["x-correlation-id"],
+  });
+  sendSuccess(res, "^_^", 200, "Pong!");
 }
-
-// 1. have some unique id generator
-
-// 2. put the id in the current request 

@@ -1,14 +1,9 @@
-import express from 'express';
-import { pingHandler } from '../../controllers/ping.controller';
-import {  validateRequestBody } from '../../validators';
-import { pingSchema } from '../../validators/ping.validator';
-
+import express, { Request, Response } from "express";
+import { pingController } from "../../controllers/ping.controller";
+import { validate } from "../../middlewares/validate";
+import { pingValidateSchema } from "../../dtos/ping.dto";
 const pingRouter = express.Router();
 
-pingRouter.get('/', validateRequestBody(pingSchema), pingHandler); // TODO: Resolve this TS compilation issue
-
-pingRouter.get('/health', (req, res) => {
-    res.status(200).send('OK');
-});
+pingRouter.get("/", validate(pingValidateSchema), pingController);
 
 export default pingRouter;

@@ -1,21 +1,24 @@
 import { NextFunction, Request, Response } from "express";
-import { AppError } from "../utils/errors/app.error";
+import { AppError } from "../utils/errors/app.error.js";
 
-export const appErrorHandler = (err: AppError, req: Request, res: Response, next: NextFunction) => {
+export function genericErrorHandler(
+  err: AppError,
+  _req: Request,
+  res: Response,
+  _next: NextFunction,
+) {
+  const body: Record<string, unknown> = {
+    success: false,
+    message: err.message,
+  };
 
-    console.log(err);
+  if (err.details) {
+    body.details = err.details;
+  }
 
-    res.status(err.statusCode).json({
-        success: false,
-        message: err.message
-    });
-}
+  // if (process.env.NODE_ENV === "development") {
+  //   body.stack = err.stack;
+  // }
 
-export const genericErrorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
-    console.log(err);
-
-    res.status(500).json({
-        success: false,
-        message: "Internal Server Error"
-    });
+  res.status(err.statusCode || 500).json(body);
 }
