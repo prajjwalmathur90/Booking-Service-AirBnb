@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { ZodSchema } from "zod";
-import { badRequest } from "../utils/errors/app.error";
+import { badRequest } from "../utils/errors/app.error.js";
 
 export const validate =
   (schema: ZodSchema) => (req: Request, _res: Response, next: NextFunction) => {

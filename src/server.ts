@@ -1,12 +1,12 @@
 import express from "express";
-import { serverConfig } from "./config";
-import v1Router from "./routers/v1/index.router";
-import v2Router from "./routers/v2/index.router";
-import { genericErrorHandler } from "./middlewares/error.middleware";
-import logger from "./config/logger.config";
-import { attachCorrelationIdMiddleware } from "./middlewares/correlation.middleware";
-import { routeNotFound } from "./middlewares/route-not-found.middleware";
-import { connectDB } from "./config/prisma";
+import { serverConfig } from "./config/index.js";
+import v1Router from "./routers/v1/index.router.js";
+import v2Router from "./routers/v2/index.router.js";
+import { genericErrorHandler } from "./middlewares/error.middleware.js";
+import logger from "./config/logger.config.js";
+import { attachCorrelationIdMiddleware } from "./middlewares/correlation.middleware.js";
+import { routeNotFound } from "./middlewares/route-not-found.middleware.js";
+import { connectDB } from "./config/prisma.js";
 const app = express();
 
 app.use(express.json());
