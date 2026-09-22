@@ -1,6 +1,9 @@
 import prisma from "../config/prisma.js";
 import logger from "../config/logger.config.js";
 import { CreateBookingDto } from "../dtos/booking.dto.js";
+import { IdempotencyKey, Prisma } from "../../generated/prisma/client.js";
+import { validate as isValidUUID } from "uuid";
+import { badRequest, notFound } from "../utils/errors/app.error.js";
 
 export async function createBooking(bookingData: CreateBookingDto) {
   const booking = await prisma.booking.create({
@@ -35,14 +38,22 @@ export async function createIdempotencyKey(key: string, bookingId: number) {
   return idempotencyKey;
 }
 
-export async function getIdempotencyKey(key: string) {
-  const idempotencyKey = await prisma.idempotencyKey.findUnique({
-    where: {
-      idemKey: key,
-    },
-  });
+export async function getIdempotencyKeyWithLock(
+  tx: Prisma.TransactionClient,
+  key: string,
+) {
+  if (!isValidUUID(key)) {
+    throw badRequest("Idempotency Key is not valid!");
+  }
 
-  return idempotencyKey;
+  const idempotencyKey: Array<IdempotencyKey> =
+    await tx.$queryRaw`SELECT * FROM IdempotencyKey WHERE IdemKey = ${key} FOR UPDATE`;
+
+  if (!idempotencyKey || idempotencyKey.length == 0) {
+    throw notFound("Idempotency Key not found!");
+  }
+
+  return idempotencyKey[0];
 }
 
 export async function getBookingById(bookingId: number) {
@@ -55,8 +66,11 @@ export async function getBookingById(bookingId: number) {
   return booking;
 }
 
-export async function confirmBooking(bookingId: number) {
-  const booking = await prisma.booking.update({
+export async function confirmBooking(
+  tx: Prisma.TransactionClient,
+  bookingId: number,
+) {
+  const booking = await tx.booking.update({
     where: {
       id: bookingId,
     },
@@ -85,8 +99,11 @@ export async function cancelBooking(bookingId: number) {
   return booking;
 }
 
-export async function finailizeIdempotencyKey(key: string) {
-  const idempotencyKey = await prisma.idempotencyKey.update({
+export async function finailizeIdempotencyKey(
+  tx: Prisma.TransactionClient,
+  key: string,
+) {
+  const idempotencyKey = await tx.idempotencyKey.update({
     where: {
       idemKey: key,
     },
