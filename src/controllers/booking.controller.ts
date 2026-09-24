@@ -11,6 +11,9 @@ export async function createBookingController(req: Request, res: Response) {
 }
 
 export async function confirmBookingController(req: Request, res: Response) {
-  const booking = await confirmBookingService(req.params.idempotencyKey!);
-  sendSuccess(res, booking, 200, "Booking confirmed");
+  const { idempotencyKey } = req.params;
+  const { email } = req.query as { email: string };
+
+  const booking = await confirmBookingService(idempotencyKey!, email);
+  sendSuccess(res, booking, 200, "Booking confirmed!");
 }

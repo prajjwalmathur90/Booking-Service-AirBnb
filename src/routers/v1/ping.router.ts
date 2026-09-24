@@ -1,9 +1,9 @@
-import express, { Request, Response } from "express";
-import { pingController } from "../../controllers/ping.controller";
-import { validate } from "../../middlewares/validate";
-import { pingValidateSchema } from "../../dtos/ping.dto";
+import express from "express";
+import { pingController } from "../../controllers/ping.controller.js";
+import { validateRequest } from "../../middlewares/validate.js";
+import { pingValidateSchema } from "../../dtos/ping.dto.js";
 const pingRouter = express.Router();
 
-pingRouter.get("/", validate(pingValidateSchema), pingController);
+pingRouter.get("/", validateRequest(pingValidateSchema), pingController);
 
 export default pingRouter;

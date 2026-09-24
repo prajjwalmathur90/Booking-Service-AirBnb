@@ -7,6 +7,7 @@ import logger from "./config/logger.config.js";
 import { attachCorrelationIdMiddleware } from "./middlewares/correlation.middleware.js";
 import { routeNotFound } from "./middlewares/route-not-found.middleware.js";
 import { connectDB } from "./config/prisma.js";
+import { addEmailToQueue } from "./producers/email.producer.js";
 const app = express();
 
 app.use(express.json());

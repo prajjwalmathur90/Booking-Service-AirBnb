@@ -12,3 +12,11 @@ export const createBookingSchema = z.object({
 });
 
 export type CreateBookingDto = z.infer<typeof createBookingSchema>;
+
+export const confirmBookingQuerySchema = z.object({
+  email: z
+    .string({ message: "Email must be present" })
+    .email({ message: "Invalid email format" }),
+});
+
+export type ConfirmBookingQueryDto = z.infer<typeof confirmBookingQuerySchema>;

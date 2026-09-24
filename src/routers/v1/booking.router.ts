@@ -1,6 +1,9 @@
 import { Router } from "express";
-import { validate } from "../../middlewares/validate.js";
-import { createBookingSchema } from "../../dtos/booking.dto.js";
+import { validateRequest, validateQuery } from "../../middlewares/validate.js";
+import {
+  createBookingSchema,
+  confirmBookingQuerySchema,
+} from "../../dtos/booking.dto.js";
 import {
   confirmBookingController,
   createBookingController,
@@ -8,7 +11,15 @@ import {
 
 const bookingRouter = Router();
 
-bookingRouter.post("/", validate(createBookingSchema), createBookingController);
-bookingRouter.post("/confirm/:idempotencyKey", confirmBookingController);
+bookingRouter.post(
+  "/",
+  validateRequest(createBookingSchema),
+  createBookingController,
+);
+bookingRouter.post(
+  "/confirm/:idempotencyKey",
+  validateQuery(confirmBookingQuerySchema),
+  confirmBookingController,
+);
 
 export default bookingRouter;

@@ -15,6 +15,7 @@ import {
 import prisma from "../config/prisma.js";
 import { redlock } from "../config/redis.config.js";
 import { serverConfig } from "../config/index.js";
+import { addEmailToQueue } from "../producers/email.producer.js";
 
 export async function createBookingService(bookingData: CreateBookingDto) {
   const ttl = serverConfig.LOCK_TTL;
@@ -22,17 +23,26 @@ export async function createBookingService(bookingData: CreateBookingDto) {
 
   try {
     await redlock.acquire([bookingResource], ttl);
+  } catch (error) {
+    throw internalServerError("Failed to acquire lock for looking resource");
+  }
+
+  try {
     const booking = await createBooking(bookingData);
     const idempotencyKey = generateIdempotencyKey();
 
     await createIdempotencyKey(idempotencyKey, booking.id);
     return { bookingId: booking.id, idempotencyKey: idempotencyKey };
   } catch (error) {
-    throw internalServerError("Failed to acquire lock for looking resource");
+    console.log(error);
+    throw internalServerError("Failed to create booking");
   }
 }
 
-export async function confirmBookingService(idempotencyKey: string) {
+export async function confirmBookingService(
+  idempotencyKey: string,
+  email: string,
+) {
   return await prisma.$transaction(async (tx) => {
     const idempotencyKeyData = await getIdempotencyKeyWithLock(
       tx,
@@ -49,6 +59,13 @@ export async function confirmBookingService(idempotencyKey: string) {
 
     const booking = await confirmBooking(tx, idempotencyKeyData.bookingId);
     await finailizeIdempotencyKey(tx, idempotencyKey);
+
+    addEmailToQueue({
+      to: email,
+      subject: "Booking confirmed",
+      templateId: "BOOKING_CONFIRMED",
+      params: { name: "Prajjwal", orderId: booking.id },
+    });
 
     return booking;
   });
