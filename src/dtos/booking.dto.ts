@@ -9,6 +9,13 @@ export const createBookingSchema = z.object({
   bookingAmount: z
     .number({ message: "Booking amount must be present" })
     .min(1, { message: "Booking amount must be greater than 1" }),
+  checkInDate: z
+    .string({ message: "Check-in date must be present" })
+    .datetime({ message: "Invalid date format" }),
+  checkOutDate: z
+    .string({ message: "Check-out date must be present" })
+    .datetime({ message: "Invalid date format" }),
+  roomCategoryId: z.number({ message: "Room category ID must be present" }),
 });
 
 export type CreateBookingDto = z.infer<typeof createBookingSchema>;

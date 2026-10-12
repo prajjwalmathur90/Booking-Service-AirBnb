@@ -16,13 +16,41 @@ import prisma from "../config/prisma.js";
 import { redlock } from "../config/redis.config.js";
 import { serverConfig } from "../config/index.js";
 import { addEmailToQueue } from "../producers/email.producer.js";
+import {
+  getAvailableRooms,
+  updateBookingIdToRooms,
+} from "../gateway/hotel.api.js";
+
+type AvailableRoom = {
+  id: number;
+  roomCategoryId: number;
+  dateOfAvailability: Date;
+};
 
 export async function createBookingService(bookingData: CreateBookingDto) {
   const ttl = serverConfig.LOCK_TTL;
   const bookingResource = `hotel:${bookingData.hotelId}`;
 
+  const availableRooms = await getAvailableRooms(
+    bookingData.roomCategoryId,
+    bookingData.checkInDate,
+    bookingData.checkOutDate,
+  );
+
+  const checkInDate = new Date(bookingData.checkInDate);
+  const checkOutDate = new Date(bookingData.checkOutDate);
+
+  const totalNights =
+    Math.ceil(checkOutDate.getTime() - checkInDate.getTime()) /
+    (1000 * 60 * 60 * 24);
+
+  if (availableRooms.length === 0 || availableRooms.length < totalNights) {
+    throw notFound("No rooms available for the given dates!");
+  }
+
+  let lock;
   try {
-    await redlock.acquire([bookingResource], ttl);
+    lock = await redlock.acquire([bookingResource], ttl);
   } catch (error) {
     throw internalServerError("Failed to acquire lock for looking resource");
   }
@@ -32,10 +60,24 @@ export async function createBookingService(bookingData: CreateBookingDto) {
     const idempotencyKey = generateIdempotencyKey();
 
     await createIdempotencyKey(idempotencyKey, booking.id);
+
+    await updateBookingIdToRooms(
+      booking.id,
+      availableRooms.map((room: AvailableRoom) => room.id),
+    );
+
     return { bookingId: booking.id, idempotencyKey: idempotencyKey };
   } catch (error) {
     console.log(error);
     throw internalServerError("Failed to create booking");
+  } finally {
+    try {
+      if (lock) {
+        await lock.unlock();
+      }
+    } catch (releaseErr) {
+      // Lock might have already expired or been released
+    }
   }
 }
 

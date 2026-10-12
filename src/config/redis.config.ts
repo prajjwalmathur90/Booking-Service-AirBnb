@@ -28,7 +28,7 @@ export const redlock = new Redlock(
   [getRedisConnectionObj() as unknown as CompatibleRedisClient],
   {
     driftFactor: 0.01,
-    retryCount: 0,
+    retryCount: 3,
     retryDelay: 200,
     retryJitter: 100,
   },

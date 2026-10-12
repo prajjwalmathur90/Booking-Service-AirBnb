@@ -17,11 +17,14 @@ model Booking {
   id                Int             @id @default(autoincrement())
   userId            Int
   hotelId           Int
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  roomCategoryId    Int
+  checkInDate       DateTime
+  checkOutDate      DateTime
+  totalGuest        Int
   bookingAmount     Int
   bookingStatus     BookingStatus   @default(PENDING)
-  totalGuest        Int
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
   idempotencyKey    IdempotencyKey?
 }
 
